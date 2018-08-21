@@ -21,13 +21,13 @@ func MakeNonce(requestTime time.Time, duration time.Duration, pubKey string) *No
 	}
 }
 
-func MakeNonce(requestUnixTime int64, durationUnix int64, pubKey string) *Nonce {
+func MakeNonceWithUnixTime(requestUnixTime int64, durationUnix int64, pubKey string) *Nonce {
 	requestTime := time.Unix(requestUnixTime, 0)
 	expirationTime := time.Unix(requestUnixTime+durationUnix, 0)
 
 	return &Nonce{
 		requestTime:    requestTime,
-		expirationTime: requestTime.Add(duration),
+		expirationTime: expirationTime,
 		publicKey:      pubKey,
 	}
 }

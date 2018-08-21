@@ -7,25 +7,22 @@ import (
 )
 
 type Token struct {
-	nonce      Nonce
+	nonce      string
 	privateKey string
 }
 
-func MakeToken(nonce Nonce, privKey string) *Token {
+func MakeToken(encodedNonce, privKey string) *Token {
 	return &Token{
-		nonce:      nonce,
+		nonce:      encodedNonce,
 		privateKey: privKey,
 	}
 }
 
 func (token *Token) Encode() string {
-	encodedNonce := token.nonce.Encode()
-
 	sha1Hash := sha1.New()
-	sha1Hash.Sum([]byte(encodedNonce))
+	sha1Hash.Sum([]byte(token.nonce))
 
-	tokenStr := fmt.Sprintf("%s:%s", encodedNonce, token.privateKey)
+	tokenStr := fmt.Sprintf("%s:%s", token.nonce, token.privateKey)
 
-	sha256Hash := sha256.New()
-	return string(sha256Hash.Sum([]byte(tokenStr)))
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(tokenStr)))
 }
