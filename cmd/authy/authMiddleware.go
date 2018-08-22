@@ -2,7 +2,6 @@ package authy
 
 import (
 	"encoding/base64"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,15 +9,23 @@ import (
 )
 
 const (
+	// NonceHeader should always be used to add or check the nonce in a request
+	// instead of X-Authentication-Nonce, to ensure consistency.
 	NonceHeader = "X-Authentication-Nonce"
+	// TokenHeader should likewise always be used in place of
+	// X-Authentication-Token to ensure consistency
 	TokenHeader = "X-Authentication-Token"
 )
 
+// AuthHandler ensures that HTTP requests contain a valid nonce and token using
+// the correct format for nonces and tokens and a map of public to private keys
 type AuthHandler struct {
 	NextHandler http.Handler
 	Keys        map[string]string
 }
 
+// NewHandler constructs a new AuthHandler object with a given next handler and
+// keys map
 func NewHandler(next http.Handler, keys map[string]string) http.Handler {
 	return &AuthHandler{
 		NextHandler: next,
@@ -26,7 +33,7 @@ func NewHandler(next http.Handler, keys map[string]string) http.Handler {
 	}
 }
 
-// ServeHTTP adds a header with a transaction ID before calling the next handler
+// ServeHTTP confirms that an HTTP request contains a valid nonce and token
 func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		nonce           string
@@ -66,7 +73,7 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	// Convert the nonce byte array to a string and split it into its components
 	decodedNonce = string(decodedNonceByteStr)
-	log.Println("Decoded nonce:", decodedNonce)
+
 	nonceProperties = strings.Split(decodedNonce, ":")
 	if len(nonceProperties) != 3 {
 		w.WriteHeader(http.StatusBadRequest)
