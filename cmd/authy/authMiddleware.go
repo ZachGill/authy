@@ -2,6 +2,7 @@ package authy
 
 import (
 	"encoding/base64"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,30 +36,24 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		token           string
 		serverToken     *Token
 	)
-	if length := len(r.Header.Get(NonceHeader)); length == 1 {
+	if length := len(r.Header.Get(NonceHeader)); length != 0 {
 		nonce = r.Header.Get(NonceHeader)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		if length == 0 {
-			w.Write([]byte("409 - Request does not contain a nonce"))
+			w.Write([]byte("401 - Request does not contain a nonce"))
 			return
 		}
-
-		w.Write([]byte("409 - Request contains more than one nonce"))
-		return
 	}
 
-	if length := len(r.Header.Get(TokenHeader)); length == 1 {
-		nonce = r.Header.Get(TokenHeader)
+	if length := len(r.Header.Get(TokenHeader)); length != 0 {
+		token = r.Header.Get(TokenHeader)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		if length == 0 {
-			w.Write([]byte("409 - Request does not contain a token"))
+			w.Write([]byte("401 - Request does not contain a token"))
 			return
 		}
-
-		w.Write([]byte("409 - Request contains more than one token"))
-		return
 	}
 
 	// Decode the Base64 encoded nonce into a byte array
@@ -71,10 +66,11 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	// Convert the nonce byte array to a string and split it into its components
 	decodedNonce = string(decodedNonceByteStr)
+	log.Println("Decoded nonce:", decodedNonce)
 	nonceProperties = strings.Split(decodedNonce, ":")
 	if len(nonceProperties) != 3 {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("409 - Request does not contain a request time"))
+		w.Write([]byte("401 - Request does not contain a request time"))
 		return
 	}
 
@@ -87,7 +83,7 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	if time.Now().Unix() > nonceExpiration {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("409 - Request nonce is expired"))
+		w.Write([]byte("401 - Request nonce is expired"))
 		return
 	}
 
@@ -96,7 +92,7 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	if serverToken.Encode() != token {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("409 - Request contains invalid token (most likely an invalid private key)"))
+		w.Write([]byte("401 - Request contains invalid token (most likely an invalid private key)"))
 		return
 	}
 
