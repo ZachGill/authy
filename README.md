@@ -1,7 +1,5 @@
 # Authy
 
-## Purpose
-
 Authy is a simple client- and server-side library for authenticating HTTP requests. It works using public and private API keys shared between the client and server.
 
 ## Using Authy
