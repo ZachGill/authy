@@ -45,22 +45,18 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	)
 	if length := len(r.Header.Get(NonceHeader)); length != 0 {
 		nonce = r.Header.Get(NonceHeader)
-	} else {
+	} else if length == 0 {
 		w.WriteHeader(http.StatusUnauthorized)
-		if length == 0 {
-			w.Write([]byte("401 - Request does not contain a nonce"))
-			return
-		}
+		w.Write([]byte("401 - Request does not contain a nonce"))
+		return
 	}
 
 	if length := len(r.Header.Get(TokenHeader)); length != 0 {
 		token = r.Header.Get(TokenHeader)
-	} else {
+	} else if length == 0 {
 		w.WriteHeader(http.StatusUnauthorized)
-		if length == 0 {
-			w.Write([]byte("401 - Request does not contain a token"))
-			return
-		}
+		w.Write([]byte("401 - Request does not contain a token"))
+		return
 	}
 
 	// Decode the Base64 encoded nonce into a byte array
