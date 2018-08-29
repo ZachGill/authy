@@ -36,12 +36,13 @@ func NewHandler(next http.Handler, keys map[string]string) http.Handler {
 // ServeHTTP confirms that an HTTP request contains a valid nonce and token
 func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
-		nonce           string
-		decodedNonce    string
-		nonceProperties []string
-		nonceExpiration int64
-		token           string
-		serverToken     *Token
+		nonce            string
+		decodedNonce     string
+		nonceProperties  []string
+		nonceRequestTime int64
+		nonceExpiration  int64
+		token            string
+		serverToken      *Token
 	)
 	if length := len(r.Header.Get(NonceHeader)); length != 0 {
 		nonce = r.Header.Get(NonceHeader)
@@ -73,7 +74,13 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	nonceProperties = strings.Split(decodedNonce, ":")
 	if len(nonceProperties) != 3 {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("401 - Request does not contain a request time"))
+		w.Write([]byte("400 - Request nonce does not contain 3 parameters"))
+		return
+	}
+
+	if nonceRequestTime, err = strconv.ParseInt(nonceProperties[0], 10, 64); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 - Request nonce request time is not in the correct Unix format"))
 		return
 	}
 
@@ -87,6 +94,14 @@ func (middleware *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	if time.Now().Unix() > nonceExpiration {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("401 - Request nonce is expired"))
+		return
+	}
+
+	// Reject a request where the nonce expires greater than 10 seconds after the
+	// request time in order to make request spoofing more difficult.
+	if (nonceExpiration - nonceRequestTime) > 10 {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("401 - Request nonce expiration time is greater than ten seconds after request time"))
 		return
 	}
 

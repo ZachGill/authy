@@ -2,7 +2,6 @@
 
 auth-example provides an example client and server using authy for request authentication.
 
-
 ### Server
 The server starts an HTTP server with a handler for the root path that returns a 200 status code when requests make it through, but those requests must first be authenticated by authy's middleware.
 
