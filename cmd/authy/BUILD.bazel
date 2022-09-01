@@ -1,0 +1,27 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "authy",
+    srcs = [
+        "authMiddleware.go",
+        "authenticateRequest.go",
+        "nonce.go",
+        "token.go",
+    ],
+    importpath = "github.com/ZachGill/authy-example/cmd/authy",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "authy_test",
+    srcs = [
+        "authMiddleware_test.go",
+        "authenticateRequest_test.go",
+        "nonce_test.go",
+        "token_test.go",
+    ],
+    deps = [
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@com_github_zachgill_authy//cmd/authy:go_default_library",
+    ],
+)
