@@ -1,0 +1,5 @@
+# Bazel symlinks
+bazel-authy
+bazel-bin
+bazel-out
+bazel-testlogs
