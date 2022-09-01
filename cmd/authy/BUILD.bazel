@@ -8,7 +8,7 @@ go_library(
         "nonce.go",
         "token.go",
     ],
-    importpath = "github.com/ZachGill/authy-example/cmd/authy",
+    importpath = "github.com/ZachGill/authy/cmd/authy",
     visibility = ["//visibility:public"],
 )
 
@@ -21,7 +21,7 @@ go_test(
         "token_test.go",
     ],
     deps = [
-        "@com_github_stretchr_testify//assert:go_default_library",
-        "@com_github_zachgill_authy//cmd/authy:go_default_library",
+        ":authy",
+        "@com_github_stretchr_testify//assert",
     ],
 )
